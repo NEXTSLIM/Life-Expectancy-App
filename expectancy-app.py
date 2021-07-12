@@ -9,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt # plotting
 import os # accessing directory structure
 from sklearn.metrics import mean_squared_error
-#import plotly.graph_objects as go
-#import plotly.express as px
+import plotly.graph_objects as go
+import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plotCorrelationMatrix
 
@@ -245,21 +245,20 @@ if st.button('Estimate LIFE EXPECTANCY'):
     st.subheader('Model Parameters')
     st.write(gbm_opt.get_params())
     
-    #AN
 
-# # Graphing Function #####
-# st.markdown("---")
-# z_data = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
 
-# z = z_data.values
-# sh_0, sh_1 = z.shape
-# x, y = np.linspace(0, 1, sh_0), np.linspace(0, 1, sh_1)
-# fig = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
-# fig.update_layout(title='IRR', autosize=False,
-#                   width=800, height=800,
-#                   margin=dict(l=40, r=40, b=40, t=40))
-# st.plotly_chart(fig)
+# Graphing Function #####
+st.markdown("---")
+z_data = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
 
+z = z_data.values
+sh_0, sh_1 = z.shape
+x, y = np.linspace(0, 1, sh_0), np.linspace(0, 1, sh_1)
+fig = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
+fig.update_layout(title='3D DATA VISUALITATION', autosize=False,
+                  width=800, height=800,
+                  margin=dict(l=40, r=40, b=40, t=40))
+st.plotly_chart(fig)
 
 
 # display data
