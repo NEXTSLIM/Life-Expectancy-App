@@ -1,22 +1,50 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import random
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt # plotting
+import os # accessing directory structure
+from sklearn.metrics import mean_squared_error
+#import plotly.graph_objects as go
+#import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plotCorrelationMatrix
+
+from sklearn import datasets, ensemble
+
+from bokeh.plotting import figure, show
+from bokeh.io import output_notebook
+
+#-------------
+#theme 
+#--
+
+primaryColor="#F63366"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#F0F2F6"
+textColor="#262730"
+font="sans serif"
 
 #-------------
 #layout design 
 #-------------
 
-st.title('LIFE EXPENCTACY Estimatior Tool')
+st.title('LIFE EXPECTANCY ESTIMATOR TOOL')
+st.markdown("---")
 st.write('''
-         This app will estimate life expectancy for a countr, given some 
-         indicator for that specific country as input.
+         This app will estimate life expectancy base on 
+World Development Indicators| Data from World Bank Open Datandata.
          
-         Please fill in the attributes below, then hit the life expectancy Estimate button
-         to get the estimate. 
-         ''')
+Please fill in the attributes below, then hit the life expectancy Estimate buttonto get the estimate. 
+''')
+st.markdown("---")
 
+#---------------------------------#
+# Model building
 st.header('Input Attributes')
 att_electric = st.slider('Access to electricity (% of population)', min_value=0, max_value=100, value= 80, step=10)
 att_ndiseases = st.slider('Cause of death, by non-communicable diseases (% of total)', min_value= 16, max_value= 96, value=69, step=10)
@@ -84,16 +112,35 @@ user_input = np.array([att_electric , att_ndiseases, att_healthexp, att_diabetes
                        att_regn_4, att_regn_5, att_regn_6, att_regn_7, 
                        ]).reshape(1,-1)
 
+
+    # AN Sidebar - Specify parameter settings
+with st.sidebar.header('Set Parameters'):
+        split_size = st.sidebar.slider('Data split ratio (percentage for Training Set)', min_value=10, max_value=90, value= 20, step=10) #use
+        learning_rate = st.sidebar.slider('Learning rate (step size shrinkage - trade-off with n_estimators)', min_value=0.01, max_value=0.3, value= 0.1, step=0.1) #done
+        parameter_n_estimators = st.sidebar.slider('Number of estimators (number of trees)', 100, 500, 1000) #done
+        parameter_max_depth = st.sidebar.slider('Max depth (maximum number of levels in each trees)', min_value=1, max_value=9, value= 3, step= 1) #done
+        parameter_max_features = st.sidebar.select_slider('Max features (Max number of features to consider at each split)', options=['auto', 'sqrt' , 'log2']) #done
+        parameter_min_samples_split = st.sidebar.slider('Minimum number of samples required to split an internal node (min_samples_split)', min_value=1, max_value=10, value= 2, step= 1) #done
+        parameter_min_samples_leaf = st.sidebar.slider('Minimum number of samples required to be at a leaf node (min_samples_leaf)', min_value=1, max_value=7, value= 1, step= 1) #done
+        parameter_subsample = st.sidebar.slider('Subsample (percentage of samples per tree) ', min_value=1, max_value=4, value= 1, step= 1) #done
+        parameter_random_state = st.sidebar.slider('random_state (Controls the random seed given to each Tree estimator at each boosting iteration)',  min_value=0, max_value=100, value=100, step= 10) #done
+        parameter_criterion = st.sidebar.select_slider('Performance measure (criterion)', options=['friedman_mse', 'mse','mae']) #done
+
 #------
 # Model
 #------
 
 #import dataset
 def get_dataset():
-    data = pd.read_csv('ML_data_SL.csv')
+    data= pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
+    # data = pd.read_csv('ML_data_SL.csv')
     return data
 
-if st.button('Estimate LIFE EXPENCTACY'):
+life_df = get_dataset()
+df = life_df.copy()
+st.markdown("---")
+
+if st.button('Estimate LIFE EXPECTANCY'):
     data = get_dataset()
     
     #fix column names
@@ -135,21 +182,109 @@ if st.button('Estimate LIFE EXPENCTACY'):
     #Data Split
     y = data_final['life_expectancy']
     X = data_final.drop(['life_expectancy','countryname','countrycode', 'year'], axis=1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=101)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=(100-split_size)/100, random_state=parameter_random_state)
+
+    gbm_opt = GradientBoostingRegressor(
+        learning_rate =learning_rate,#use
+        n_estimators=parameter_n_estimators, #use
+        random_state=parameter_random_state, #use
+        max_depth=parameter_max_depth, #use
+        max_features=parameter_max_features, #use
+        subsample= parameter_subsample, #use
+        criterion=parameter_criterion, #use
+        min_samples_split=parameter_min_samples_split, #use
+        min_samples_leaf=parameter_min_samples_leaf)#use
     
     #model training
-    gbm_opt = GradientBoostingRegressor(learning_rate=0.01, n_estimators=500,
-                                        max_depth=5, min_samples_split=10, 
-                                        min_samples_leaf=1, subsample=0.7,
-                                        max_features=7, random_state=101)
+
+    # gbm_opt = GradientBoostingRegressor(learning_rate=0.01, n_estimators=500,
+    #                                         max_depth=5, min_samples_split=10, 
+    #                                         min_samples_leaf=1, subsample=0.7,
+    #                                         max_features= 18, random_state=101, criterion='friedman_mse')
     gbm_opt.fit(X_train,y_train)
+
+    ##AN - New
+    st.markdown('**Data splits**')
+    st.write('Training set')
+    st.info(X_train.shape)
+    st.write('Test set')
+    st.info(X_test.shape)
+
+    st.markdown('**Variable details**:')
+    st.write('X variable - Attributes')
+    st.info(list(X.columns))
+    st.write('Y variable - Prediction')
+    st.info(y.name)
+    ##AN 
     
     #making a prediction
-    gbm_predictions = gbm_opt.predict(user_input) #user_input is taken from input attrebutes
-    gmb_score = gbm_opt.score(X,y) 
-    st.write('The LIFE EXPENDACASY BASE ON YOUR IMPUTS is: ', gbm_predictions)
-    # st.write('with an R2 score of: ', gmb_score)
+    gbm_predictions = gbm_opt.predict(user_input) #user_input is taken from input attributes 
+    gbm_score = gbm_opt.score(X_test,y_test) #R2 of the prediction from user input
+    gbm_mse = mean_squared_error(y_test, gbm_opt.predict(X_test))
+    gbm_rmse = gbm_mse**(1/2)
+
+    gbm_mse_train = mean_squared_error(y_train, gbm_opt.predict(X_train))
+    gbm_rmse_train = gbm_mse_train**(1/2)
+
+    st.write('Based on the user input the estimated Life Expectancy for this region is: ')
+    st.info((gbm_predictions))
+
+    st.subheader('Model Performance')
+
+    st.write('With an ($R^2$) score of: ', gbm_score)
+    
+    st.write('Error (MSE or MAE) for testing:')
+    st.info(gbm_mse)
+    st.write("The root mean squared error (RMSE) on test set: {:.4f}".format(gbm_rmse))
+
+    st.write('Error (MSE or MAE) for training:')
+    st.info(gbm_mse_train)
+    st.write("The root mean squared error (RMSE) on train set: {:.4f}".format(gbm_rmse_train))
+
+
+    st.subheader('Model Parameters')
+    st.write(gbm_opt.get_params())
+    
+    #AN
+
+# # Graphing Function #####
+# st.markdown("---")
+# z_data = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
+
+# z = z_data.values
+# sh_0, sh_1 = z.shape
+# x, y = np.linspace(0, 1, sh_0), np.linspace(0, 1, sh_1)
+# fig = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
+# fig.update_layout(title='IRR', autosize=False,
+#                   width=800, height=800,
+#                   margin=dict(l=40, r=40, b=40, t=40))
+# st.plotly_chart(fig)
 
 
 
+# display data
+st.markdown("---")
+with st.beta_container():
+    show_data = st.checkbox("See the raw data?")
 
+    if show_data:
+        df
+st.markdown("---")
+# Life Expectancy Data.csv has 2939 rows in reality, but we are only loading/previewing the first 1000 rows
+df1 = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
+df1.dataframeName = 'https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv'
+nRow, nCol = df1.shape
+def plotCorrelationMatrix(df, graphWidth):
+    filename = df.dataframeName
+    df = df.dropna('columns') # drop columns with NaN
+    df = df[[col for col in df if df[col].nunique() > 1]] # keep columns where there are more than 1 unique values
+    if df.shape[1] < 2:
+        print(f'No correlation plots shown: The number of non-NaN or constant columns ({df.shape[1]}) is less than 2')
+        return
+    corr = df.corr()
+
+#Building Correlation Matrix Model for data
+st.subheader('Correlation between features')
+fig3 = plt.figure()
+sns.heatmap(df1.corr())
+st.pyplot(fig3)
