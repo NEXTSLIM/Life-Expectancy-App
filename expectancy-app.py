@@ -116,13 +116,16 @@ user_input = np.array([att_electric , att_ndiseases, att_healthexp, att_diabetes
     # AN Sidebar - Specify parameter settings
 with st.sidebar.header('Set Parameters'):
         split_size = st.sidebar.slider('Data split ratio (percentage for Training Set)', min_value=10, max_value=90, value= 20, step=10) #use
-        learning_rate = st.sidebar.slider('Learning rate (step size shrinkage - trade-off with n_estimators)', min_value=0.01, max_value=0.3, value= 0.1, step=0.1) #done
+        learning_rate = st.sidebar.select_slider('Learning rate (trade-off with n_estimators)', options=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]) #done
         parameter_n_estimators = st.sidebar.slider('Number of estimators (number of trees)', 100, 500, 1000) #done
         parameter_max_depth = st.sidebar.slider('Max depth (maximum number of levels in each trees)', min_value=1, max_value=9, value= 3, step= 1) #done
         parameter_max_features = st.sidebar.select_slider('Max features (Max number of features to consider at each split)', options=['auto', 'sqrt' , 'log2']) #done
         parameter_min_samples_split = st.sidebar.slider('Minimum number of samples required to split an internal node (min_samples_split)', min_value=1, max_value=10, value= 2, step= 1) #done
-        parameter_min_samples_leaf = st.sidebar.slider('Minimum number of samples required to be at a leaf node (min_samples_leaf)', min_value=1, max_value=7, value= 1, step= 1) #done
-        parameter_subsample = st.sidebar.slider('Subsample (percentage of samples per tree) ', min_value=1, max_value=4, value= 1, step= 1) #done
+        parameter_min_samples_leaf = st.sidebar.slider('Minimum number of samples required to be at a leaf node (min_samples_leaf)', min_value=1, max_value=8, value= 1, step= 1) #done
+        #AN addition
+        parameter_max_leaf_node = st.sidebar.slider('Grow trees with max_leaf_nodes in best-first fashion', min_value=8, max_value=32, value= 8, step= 2) #done
+
+        parameter_subsample = st.sidebar.select_slider('Subsample (percentage of samples per tree) ', options=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]) #done
         parameter_random_state = st.sidebar.slider('random_state (Controls the random seed given to each Tree estimator at each boosting iteration)',  min_value=0, max_value=100, value=100, step= 10) #done
         parameter_criterion = st.sidebar.select_slider('Performance measure (criterion)', options=['friedman_mse', 'mse','mae']) #done
 
@@ -193,7 +196,9 @@ if st.button('Estimate LIFE EXPECTANCY'):
         subsample= parameter_subsample, #use
         criterion=parameter_criterion, #use
         min_samples_split=parameter_min_samples_split, #use
-        min_samples_leaf=parameter_min_samples_leaf)#use
+        min_samples_leaf=parameter_min_samples_leaf,#use
+        #AN Additional
+        max_leaf_nodes=parameter_max_leaf_node)
     
     #model training
 
@@ -247,7 +252,7 @@ if st.button('Estimate LIFE EXPECTANCY'):
     
 
 
-# Graphing Function #####
+# # Graphing Function #####
 st.markdown("---")
 z_data = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
 
