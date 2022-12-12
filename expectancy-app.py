@@ -140,8 +140,8 @@ with st.sidebar.header('Set Parameters'):
 
 #import dataset
 def get_dataset():
-    data= pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
-    # data = pd.read_csv('ML_data_SL.csv')
+    # data= pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
+    data = pd.read_csv('ML_data_SL.csv')
     return data
 
 life_df = get_dataset()
@@ -316,8 +316,8 @@ if st.button('ESTIMATE LIFE EXPECTANCY'):
 
 # # Graphing Function #####
 st.markdown("---")
-z_data = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
-
+#z_data = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
+z_data = pd.read_csv('ML_data_SL.csv')
 z = z_data.values
 sh_0, sh_1 = z.shape
 x, y = np.linspace(0, 1, sh_0), np.linspace(0, 1, sh_1)
@@ -339,8 +339,10 @@ with st.beta_container():
         df
 st.markdown("---")
 # Life Expectancy Data.csv has 2939 rows in reality, but we are only loading/previewing the first 1000 rows
-df1 = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
-df1.dataframeName = 'https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv'
+#df1 = pd.read_csv('https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv')
+df1 = pd.read_csv('ML_data_SL.csv')
+#df1.dataframeName = 'https://renzo-test1.s3.amazonaws.com/life_expectancy/ML_data_SL.csv'
+df1.dataframeName = 'ML_data_SL.csv'
 nRow, nCol = df1.shape
 def plotCorrelationMatrix(df, graphWidth):
     filename = df.dataframeName
